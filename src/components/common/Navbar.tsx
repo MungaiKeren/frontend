@@ -16,10 +16,18 @@ import {
   List,
   ListItem,
   ListItemText,
+  Avatar,
+  Tooltip,
+  Divider,
 } from '@mui/material';
 import { styled, alpha } from '@mui/material/styles';
 import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import PersonIcon from '@mui/icons-material/Person';
+import SettingsIcon from '@mui/icons-material/Settings';
+import LogoutIcon from '@mui/icons-material/Logout';
+import { useAuth } from '../../hooks/useAuth';
 
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',
@@ -62,10 +70,20 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
+  const { isAuthenticated, handleLogout, user } = useAuth();
   const theme = useTheme();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
+  };
+
+  const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setUserMenuAnchor(event.currentTarget);
+  };
+
+  const handleUserMenuClose = () => {
+    setUserMenuAnchor(null);
   };
 
   const menuItems = [
@@ -74,11 +92,21 @@ const Navbar = () => {
     { text: 'Favorites', path: '/favorites' },
   ];
 
+  const userMenuItems = [
+    { text: 'Profile', path: '/profile', icon: <PersonIcon fontSize="small" /> },
+    { text: 'Settings', path: '/settings', icon: <SettingsIcon fontSize="small" /> },
+    { text: 'Logout', action: () => {
+      handleLogout();
+      handleUserMenuClose();
+    }, icon: <LogoutIcon fontSize="small" /> },
+  ];
+
   const drawer = (
     <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center' }}>
       <Typography variant="h6" sx={{ my: 2 }}>
         RecipeHub
       </Typography>
+      <Divider />
       <List>
         {menuItems.map((item) => (
           <ListItem key={item.text} component={RouterLink} to={item.path}>
@@ -96,14 +124,29 @@ const Navbar = () => {
             />
           </Search>
         </ListItem>
-        <ListItem component={RouterLink} to="/login">
-          <Button color="inherit">Login</Button>
-        </ListItem>
-        <ListItem component={RouterLink} to="/register">
-          <Button variant="contained" color="secondary">
-            Sign Up
-          </Button>
-        </ListItem>
+        {!isAuthenticated ? (
+          <>
+            <ListItem component={RouterLink} to="/login">
+              <Button color="inherit">Login</Button>
+            </ListItem>
+            <ListItem component={RouterLink} to="/register">
+              <Button variant="contained" color="secondary">
+                Sign Up
+              </Button>
+            </ListItem>
+          </>
+        ) : (
+          userMenuItems.map((item) => (
+            <ListItem
+              key={item.text}
+              onClick={item.action || (() => {})}
+              component={item.path ? RouterLink : 'div'}
+              to={item.path || ''}
+            >
+              <ListItemText primary={item.text} />
+            </ListItem>
+          ))
+        )}
       </List>
     </Box>
   );
@@ -190,25 +233,84 @@ const Navbar = () => {
               />
             </Search>
 
-            {/* Auth buttons */}
+            {/* Auth buttons or User menu */}
             <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
-              <Button
-                component={RouterLink}
-                to="/login"
-                color="inherit"
-                sx={{ ml: 1 }}
-              >
-                Login
-              </Button>
-              <Button
-                component={RouterLink}
-                to="/register"
-                variant="contained"
-                color="secondary"
-                sx={{ ml: 1 }}
-              >
-                Sign Up
-              </Button>
+              {!isAuthenticated ? (
+                <>
+                  <Button
+                    component={RouterLink}
+                    to="/login"
+                    color="inherit"
+                    sx={{ ml: 1 }}
+                  >
+                    Login
+                  </Button>
+                  <Button
+                    component={RouterLink}
+                    to="/register"
+                    variant="contained"
+                    color="secondary"
+                    sx={{ ml: 1 }}
+                  >
+                    Sign Up
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Tooltip title="Account settings">
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>                      
+                      <IconButton
+                        onClick={handleUserMenuOpen}
+                        size="small"
+                        sx={{ ml: 2 }}
+                        aria-controls={userMenuAnchor ? 'user-menu' : undefined}
+                        aria-haspopup="true"
+                        aria-expanded={userMenuAnchor ? 'true' : undefined}
+                      >
+                        <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
+                          <AccountCircleIcon />
+                        </Avatar>
+                        </IconButton>
+                        <Typography sx={{ mr: 1 }}>{user?.name || 'User'}</Typography>
+                    </Box>
+                  </Tooltip>
+                  <Menu
+                    id="user-menu"
+                    anchorEl={userMenuAnchor}
+                    open={Boolean(userMenuAnchor)}
+                    onClose={handleUserMenuClose}
+                    onClick={handleUserMenuClose}
+                    PaperProps={{
+                      elevation: 0,
+                      sx: {
+                        overflow: 'visible',
+                        filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
+                        mt: 1.5,
+                        '& .MuiAvatar-root': {
+                          width: 32,
+                          height: 32,
+                          ml: -0.5,
+                          mr: 1,
+                        },
+                      },
+                    }}
+                    transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                    anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                  >
+                    {userMenuItems.map((item) => (
+                      <MenuItem
+                        key={item.text}
+                        onClick={item.action || (() => {})}
+                        component={item.path ? RouterLink : 'div'}
+                        to={item.path || ''}
+                      >
+                        {item.icon}
+                        <Typography sx={{ ml: 1 }}>{item.text}</Typography>
+                      </MenuItem>
+                    ))}
+                  </Menu>
+                </>
+              )}
             </Box>
           </Toolbar>
         </Container>
@@ -221,7 +323,7 @@ const Navbar = () => {
         open={mobileOpen}
         onClose={handleDrawerToggle}
         ModalProps={{
-          keepMounted: true, // Better open performance on mobile.
+          keepMounted: true,
         }}
         sx={{
           display: { xs: 'block', md: 'none' },
