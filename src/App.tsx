@@ -8,7 +8,7 @@ import Footer from './components/common/Footer'
 import Home from './pages/Home'
 import Recipes from './pages/Recipes'
 import RecipeDetail from './pages/RecipeDetail'
-// import CreateRecipe from './pages/CreateRecipe'
+import CreateRecipe from './pages/CreateRecipe'
 import Favorites from './pages/Favorites'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -40,7 +40,7 @@ function App() {
                   <Route path="/recipes" element={<Recipes />} />
                   <Route path="/recipes/:id" element={<RecipeDetail />} />
                   <Route path="/my-recipes" element={<MyRecipes />} />
-                  {/* <Route path="/create-recipe" element={<CreateRecipe />} /> */}
+                  <Route path="/create-recipe" element={<CreateRecipe />} />
                   <Route path="/favorites" element={<Favorites />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
