@@ -14,6 +14,7 @@ import {
   Skeleton,
   IconButton,
   Tooltip,
+  CardMedia,
 } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
@@ -94,6 +95,41 @@ const RecipeDetail = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
+      {/* Image Section */}
+      {recipe.featured_image && (
+        <Paper sx={{ mb: 4, overflow: 'hidden' }}>
+          <CardMedia
+            component="img"
+            height="400"
+            image={recipe.featured_image}
+            alt={recipe.title}
+            sx={{ objectFit: 'cover' }}
+          />
+        </Paper>
+      )}
+
+      {/* Additional Images */}
+      {recipe.additional_images && recipe.additional_images.length > 0 && (
+        <Paper sx={{ p: 2, mb: 4 }}>
+          <Grid container spacing={2}>
+            {recipe.additional_images.map((image, index) => (
+              <Grid item xs={12} sm={6} md={4} key={index}>
+                <CardMedia
+                  component="img"
+                  height="200"
+                  image={image}
+                  alt={`${recipe.title} - Additional image ${index + 1}`}
+                  sx={{ 
+                    objectFit: 'cover',
+                    borderRadius: 1
+                  }}
+                />
+              </Grid>
+            ))}
+          </Grid>
+        </Paper>
+      )}
+
       {/* Header Section */}
       <Paper sx={{ p: 4, mb: 4 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>

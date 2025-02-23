@@ -89,6 +89,7 @@ const Navbar = () => {
   const menuItems = [
     { text: 'Recipes', path: '/recipes' },
     { text: 'Create Recipe', path: '/create-recipe' },
+    { text: 'My Recipes', path: '/my-recipes' },
     { text: 'Favorites', path: '/favorites' },
   ];
 

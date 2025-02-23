@@ -14,6 +14,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import { Box } from '@mui/material'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import MyRecipes from './pages/MyRecipes'
 
 const queryClient = new QueryClient()
 
@@ -38,6 +39,7 @@ function App() {
                   <Route path="/" element={<Home />} />
                   <Route path="/recipes" element={<Recipes />} />
                   <Route path="/recipes/:id" element={<RecipeDetail />} />
+                  <Route path="/my-recipes" element={<MyRecipes />} />
                   {/* <Route path="/create-recipe" element={<CreateRecipe />} /> */}
                   <Route path="/favorites" element={<Favorites />} />
                   <Route path="/login" element={<Login />} />
