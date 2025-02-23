@@ -15,7 +15,7 @@ import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material'
 import { useForm, useFieldArray, Controller } from 'react-hook-form'
 import Button from '../components/common/Button'
 import Input from '../components/common/Input'
-import { Category } from '../types/recipe'
+import { Category, Ingredient } from '../types/recipe'
 import api from '../services/api'
 
 interface RecipeFormData {
@@ -32,6 +32,10 @@ interface RecipeFormData {
     ingredient_id: number
     quantity: number
     notes?: string
+    ingredient?: {
+      name: string
+      unit: string
+    }
   }[]
   instructions: {
     step_number: number
@@ -62,7 +66,7 @@ const CreateRecipe = () => {
     useFieldArray({ control, name: 'instructions' })
 
   // Fetch available ingredients
-  const { data: ingredients } = useQuery({
+  const { data: ingredients } = useQuery<Ingredient[]>({
     queryKey: ['ingredients'],
     queryFn: () => api.get('/api/ingredients').then(res => res.data),
   })
@@ -223,7 +227,7 @@ const CreateRecipe = () => {
                         {...field}
                         sx={{ flexGrow: 1 }}
                       >
-                        {ingredients?.map((ing: any) => (
+                        {ingredients?.map((ing) => (
                           <MenuItem key={ing.id} value={ing.id}>
                             {ing.name} ({ing.unit})
                           </MenuItem>
@@ -240,16 +244,23 @@ const CreateRecipe = () => {
                   <Input
                     {...register(`ingredients.${index}.notes`)}
                     label="Notes"
+                    placeholder="e.g., finely chopped"
                     sx={{ flexGrow: 1 }}
                   />
-                  <IconButton onClick={() => removeIngredient(index)}>
+                  <IconButton 
+                    onClick={() => removeIngredient(index)}
+                    disabled={ingredientFields.length === 1}
+                  >
                     <DeleteIcon />
                   </IconButton>
                 </Box>
               ))}
               <Button
                 startIcon={<AddIcon />}
-                onClick={() => appendIngredient({ ingredient_id: 0, quantity: 0 })}
+                onClick={() => appendIngredient({ 
+                  ingredient_id: 0, 
+                  quantity: 0 
+                })}
               >
                 Add Ingredient
               </Button>
