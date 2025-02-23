@@ -7,19 +7,29 @@ import {
   Grid 
 } from '@mui/material';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
+import fimage from "../assets/images/veg.jpg";
+import { Link } from 'react-router-dom';
+import { Skeleton } from '@mui/material';
+import { useRecipes } from '../hooks/useRecipes';
 
+// Add this near the top of the component
 const Home = () => {
+  
+
+  const { data: recipes, isLoading, error } = useRecipes();
+
   return (
     <Box sx={{ width: '100%' }}>
       {/* Hero Section */}
       <Paper 
         elevation={0}
         sx={{
-          bgcolor: 'primary.main',
+          bgcolor: 'secondary.dark',
           color: 'white',
           py: 8,
           mb: 4,
-          width: '100%'
+          width: '100%',
+          borderRadius: 0,
         }}
       >
         <Container maxWidth={false}>
@@ -44,7 +54,7 @@ const Home = () => {
               <Button 
                 variant="contained" 
                 size="large"
-                color="secondary"
+                color="primary"
                 startIcon={<RestaurantIcon />}
                 sx={{ mr: 2 }}
               >
@@ -59,19 +69,17 @@ const Home = () => {
               </Button>
             </Grid>
             <Grid item xs={12} md={6}>
-              {/* You can add an image here later */}
               <Box 
+                component="img"
+                src={fimage}
                 sx={{ 
-                  height: 300, 
-                  bgcolor: 'rgba(255,255,255,0.1)',
+                  width: '100%',
+                  height: 'auto',
+                  maxHeight: 400,
+                  objectFit: 'cover',
                   borderRadius: 2,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
                 }}
-              >
-                <Typography variant="h6">Featured Image</Typography>
-              </Box>
+              />
             </Grid>
           </Grid>
         </Container>
@@ -87,28 +95,47 @@ const Home = () => {
           Featured Recipes
         </Typography>
         <Grid container spacing={4}>
-          {[1, 2, 3].map((item) => (
-            <Grid item xs={12} md={4} key={item}>
-              <Paper
-                sx={{
-                  p: 3,
-                  height: 200,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  textAlign: 'center'
-                }}
-              >
-                <Typography variant="h6" sx={{ mb: 2 }}>
-                  Recipe {item}
-                </Typography>
-                <Button variant="text" color="primary">
-                  View Recipe
-                </Button>
-              </Paper>
-            </Grid>
-          ))}
+          {isLoading ? (
+            // Show loading skeletons
+            [...Array(3)].map((_, index) => (
+              <Grid item xs={12} md={4} key={index}>
+                <Skeleton variant="rectangular" height={200} />
+              </Grid>
+            ))
+          ) : error ? (
+            <Typography color="error">Error loading recipes</Typography>
+          ) : (
+            recipes?.slice(0, 3).map((recipe) => (
+              <Grid item xs={12} md={4} key={recipe.id}>
+                <Paper
+                  sx={{
+                    p: 3,
+                    height: 200,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    textAlign: 'center'
+                  }}
+                >
+                  <Typography variant="h6" sx={{ mb: 1 }}>
+                    {recipe.title}
+                  </Typography>
+                  <Typography variant="body2" sx={{ mb: 2 }}>
+                    {recipe.description}
+                  </Typography>
+                  <Button 
+                    variant="text" 
+                    color="primary"
+                    component={Link}
+                    to={`/recipes/${recipe.id}`}
+                  >
+                    View Recipe
+                  </Button>
+                </Paper>
+              </Grid>
+            ))
+          )}
         </Grid>
       </Container>
     </Box>

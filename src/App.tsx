@@ -13,38 +13,43 @@ import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import { Box } from '@mui/material'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+
+const queryClient = new QueryClient()
 
 function App() {
   return (
-    <AuthProvider>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <Router>
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              flexDirection: 'column',
-              minHeight: '100vh',
-              width: '100%'
-            }}
-          >
-            <Navbar />
-            <Box component="main" sx={{ flexGrow: 1, width: '100%' }}>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                {/* <Route path="/recipes" element={<Recipes />} />
-                <Route path="/recipes/:id" element={<RecipeDetail />} />
-                <Route path="/create-recipe" element={<CreateRecipe />} />
-                <Route path="/favorites" element={<Favorites />} /> */}
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-              </Routes>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <Router>
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                flexDirection: 'column',
+                minHeight: '100vh',
+                width: '100%'
+              }}
+            >
+              <Navbar />
+              <Box component="main" sx={{ flexGrow: 1, width: '100%' }}>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  {/* <Route path="/recipes" element={<Recipes />} />
+                  <Route path="/recipes/:id" element={<RecipeDetail />} />
+                  <Route path="/create-recipe" element={<CreateRecipe />} />
+                  <Route path="/favorites" element={<Favorites />} /> */}
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                </Routes>
+              </Box>
+              <Footer />
             </Box>
-            <Footer />
-          </Box>
-        </Router>
-      </ThemeProvider>
-    </AuthProvider>
+          </Router>
+        </ThemeProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   )
 }
 
