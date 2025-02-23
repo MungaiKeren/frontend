@@ -133,7 +133,7 @@ const RecipeDetail = () => {
           />
           <Chip 
             icon={<AccessTimeIcon />} 
-            label={`Cook: ${recipe.cook_time} mins`}
+            label={`Cook: ${recipe.cooking_time} mins`}
           />
           <Chip 
             icon={<RestaurantIcon />} 
@@ -151,11 +151,11 @@ const RecipeDetail = () => {
             </Typography>
             <Divider sx={{ mb: 2 }} />
             <List>
-              {recipe.ingredients.map((ingredient) => (
-                <ListItem key={ingredient.id}>
+              {recipe.ingredients.map((recipeIngredient) => (
+                <ListItem key={recipeIngredient.ingredient_id}>
                   <ListItemText
-                    primary={ingredient.name}
-                    secondary={`${ingredient.amount} ${ingredient.unit}`}
+                    primary={recipeIngredient.ingredient.name}
+                    secondary={`${recipeIngredient.quantity} ${recipeIngredient.ingredient.unit}`}
                   />
                 </ListItem>
               ))}
@@ -172,13 +172,13 @@ const RecipeDetail = () => {
             <Divider sx={{ mb: 2 }} />
             <List>
               {recipe.instructions
-                .sort((a, b) => a.step - b.step)
+                .sort((a, b) => a.step_number - b.step_number)
                 .map((instruction) => (
                 <ListItem key={instruction.id}>
                   <ListItemText
                     primary={
                       <Typography variant="h6" component="span">
-                        Step {instruction.step}
+                        Step {instruction.step_number}
                       </Typography>
                     }
                     secondary={instruction.description}
