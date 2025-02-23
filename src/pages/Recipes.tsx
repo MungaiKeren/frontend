@@ -14,20 +14,7 @@ const Recipes = () => {
   const { data: recipes, isLoading, error } = useRecipes();
 
   return (
-    <Container maxWidth={false} sx={{ py: 4 }}>
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" sx={{ mb: 2 }}>
-          All Recipes
-        </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          component={Link}
-          to="/recipes/create"
-        >
-          Create New Recipe
-        </Button>
-      </Box>
+    <Container maxWidth={false} sx={{ py: 4 }}>     
 
       <Grid container spacing={4}>
         {isLoading ? (

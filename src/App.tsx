@@ -6,10 +6,10 @@ import theme from './theme'
 import Navbar from './components/common/Navbar'
 import Footer from './components/common/Footer'
 import Home from './pages/Home'
-// import Recipes from './pages/Recipes'
-// import RecipeDetail from './pages/RecipeDetail'
+import Recipes from './pages/Recipes'
+import RecipeDetail from './pages/RecipeDetail'
 // import CreateRecipe from './pages/CreateRecipe'
-// import Favorites from './pages/Favorites'
+import Favorites from './pages/Favorites'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import { Box } from '@mui/material'
@@ -36,10 +36,10 @@ function App() {
               <Box component="main" sx={{ flexGrow: 1, width: '100%' }}>
                 <Routes>
                   <Route path="/" element={<Home />} />
-                  {/* <Route path="/recipes" element={<Recipes />} />
+                  <Route path="/recipes" element={<Recipes />} />
                   <Route path="/recipes/:id" element={<RecipeDetail />} />
-                  <Route path="/create-recipe" element={<CreateRecipe />} />
-                  <Route path="/favorites" element={<Favorites />} /> */}
+                  {/* <Route path="/create-recipe" element={<CreateRecipe />} /> */}
+                  <Route path="/favorites" element={<Favorites />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                 </Routes>

@@ -15,5 +15,18 @@ export const recipeService = {
   getRecipe: async (id: number): Promise<Recipe> => {
     const response = await api.get(`/api/recipes/${id}`);
     return response.data;
+  },
+
+  addToFavorites: async (recipeId: number): Promise<void> => {
+    await api.post(`/api/favorites/${recipeId}`);
+  },
+
+  removeFromFavorites: async (recipeId: number): Promise<void> => {
+    await api.delete(`/api/favorites/${recipeId}`);
+  },
+
+  getFavorites: async (): Promise<Recipe[]> => {
+    const response = await api.get('/api/favorites');
+    return response.data;
   }
 };
