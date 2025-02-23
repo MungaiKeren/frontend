@@ -22,27 +22,26 @@ interface RecipeFormData {
   title: string
   description: string
   cooking_time: number
-  prep_time?: number
+  prep_time: number
+  total_time: number
   servings: number
-  difficulty?: string
-  category?: Category
-  cuisine?: string
+  difficulty: string
+  category: Category
+  cuisine: string
   dietary_info?: string
   ingredients: {
     ingredient_id: number
     quantity: number
     notes?: string
-    ingredient?: {
-      name: string
-      unit: string
-    }
   }[]
   instructions: {
     step_number: number
     description: string
   }[]
-  featured_image?: File
-  additional_images?: File[]
+  featured_image?: File | string
+  additional_images?: (File | string)[]
+  featured_image_url?: string
+  additional_image_urls?: string[]
 }
 
 const CreateRecipe = () => {
@@ -52,10 +51,17 @@ const CreateRecipe = () => {
     additional: string[]
   }>({ additional: [] })
 
-  const { register, control, handleSubmit, formState: { errors } } = useForm<RecipeFormData>({
+  const { register, control, handleSubmit, watch, formState: { errors } } = useForm<RecipeFormData>({
     defaultValues: {
       ingredients: [{ ingredient_id: 0, quantity: 0 }],
       instructions: [{ step_number: 1, description: '' }],
+      prep_time: 0,
+      total_time: 0,
+      difficulty: 'easy',
+      category: Category.BREAKFAST,
+      cuisine: 'Other',
+      featured_image_url: '',
+      additional_image_urls: []
     }
   })
 
@@ -73,6 +79,10 @@ const CreateRecipe = () => {
 
   const createRecipeMutation = useMutation({
     mutationFn: async (data: RecipeFormData) => {
+      if (!data.total_time) {
+        data.total_time = (data.prep_time || 0) + data.cooking_time
+      }
+
       const formData = new FormData()
       
       // Append basic recipe data
@@ -87,14 +97,28 @@ const CreateRecipe = () => {
       formData.append('ingredients', JSON.stringify(data.ingredients))
       formData.append('instructions', JSON.stringify(data.instructions))
 
-      // Append images
-      if (data.featured_image) {
+      // Handle featured image (either file upload or URL)
+      if (data.featured_image instanceof File) {
         formData.append('featured_image', data.featured_image)
+      } else if (data.featured_image_url) {
+        formData.append('featured_image', data.featured_image_url)
       }
+
+      // Handle additional images (mix of files and URLs)
       if (data.additional_images) {
+        const additionalImageUrls: string[] = []
+        
         Array.from(data.additional_images).forEach(image => {
-          formData.append('additional_images', image)
+          if (image instanceof File) {
+            formData.append('additional_images', image)
+          } else if (typeof image === 'string') {
+            additionalImageUrls.push(image)
+          }
         })
+
+        if (additionalImageUrls.length > 0) {
+          formData.append('additional_image_urls', JSON.stringify(additionalImageUrls))
+        }
       }
 
       return api.post('/api/recipes/create', formData, {
@@ -159,18 +183,20 @@ const CreateRecipe = () => {
                 </Grid>
                 <Grid item xs={12} sm={4}>
                   <Input
+                    {...register('prep_time', { required: 'Prep time is required' })}
+                    label="Prep Time (minutes)"
+                    type="number"
+                    error={!!errors.prep_time}
+                    helperText={errors.prep_time?.message}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <Input
                     {...register('cooking_time', { required: 'Cooking time is required' })}
                     label="Cooking Time (minutes)"
                     type="number"
                     error={!!errors.cooking_time}
                     helperText={errors.cooking_time?.message}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <Input
-                    {...register('prep_time')}
-                    label="Prep Time (minutes)"
-                    type="number"
                   />
                 </Grid>
                 <Grid item xs={12} sm={4}>
@@ -182,29 +208,54 @@ const CreateRecipe = () => {
                     helperText={errors.servings?.message}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid item xs={12} sm={4}>
+                  <Controller
+                    name="difficulty"
+                    control={control}
+                    rules={{ required: 'Difficulty is required' }}
+                    render={({ field }) => (
+                      <Input
+                        select
+                        label="Difficulty"
+                        error={!!errors.difficulty}
+                        helperText={errors.difficulty?.message}
+                        {...field}
+                      >
+                        <MenuItem value="easy">Easy</MenuItem>
+                        <MenuItem value="medium">Medium</MenuItem>
+                        <MenuItem value="hard">Hard</MenuItem>
+                      </Input>
+                    )}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={4}>
                   <Controller
                     name="category"
                     control={control}
+                    rules={{ required: 'Category is required' }}
                     render={({ field }) => (
                       <Input
                         select
                         label="Category"
+                        error={!!errors.category}
+                        helperText={errors.category?.message}
                         {...field}
                       >
-                        {Object.values(Category).map((category) => (
-                          <MenuItem key={category} value={category}>
-                            {category.charAt(0).toUpperCase() + category.slice(1)}
+                        {Object.entries(Category).map(([key, value]) => (
+                          <MenuItem key={key} value={value}>
+                            {key.charAt(0) + key.slice(1).toLowerCase()}
                           </MenuItem>
                         ))}
                       </Input>
                     )}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid item xs={12} sm={4}>
                   <Input
-                    {...register('cuisine')}
+                    {...register('cuisine', { required: 'Cuisine is required' })}
                     label="Cuisine"
+                    error={!!errors.cuisine}
+                    helperText={errors.cuisine?.message}
                   />
                 </Grid>
               </Grid>
@@ -305,19 +356,32 @@ const CreateRecipe = () => {
             <Paper sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom>Images</Typography>
               <Stack spacing={2}>
+                {/* Featured Image */}
                 <Box>
-                  <input
-                    accept="image/*"
-                    type="file"
-                    id="featured-image"
-                    hidden
-                    onChange={(e) => handleImagePreview(e, 'featured')}
-                  />
-                  <label htmlFor="featured-image">
-                    <Button component="span">
-                      Upload Featured Image
-                    </Button>
-                  </label>
+                  <Typography variant="subtitle1" gutterBottom>Featured Image</Typography>
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Box>
+                      <input
+                        accept="image/*"
+                        type="file"
+                        id="featured-image"
+                        hidden
+                        onChange={(e) => handleImagePreview(e, 'featured')}
+                      />
+                      <label htmlFor="featured-image">
+                        <Button component="span">
+                          Upload Image
+                        </Button>
+                      </label>
+                    </Box>
+                    <Typography>OR</Typography>
+                    <Input
+                      {...register('featured_image_url')}
+                      label="Image URL"
+                      placeholder="https://example.com/image.jpg"
+                      fullWidth
+                    />
+                  </Stack>
                   {previewImages.featured && (
                     <Box sx={{ mt: 2 }}>
                       <img 
@@ -329,20 +393,44 @@ const CreateRecipe = () => {
                   )}
                 </Box>
 
+                {/* Additional Images */}
                 <Box>
-                  <input
-                    accept="image/*"
-                    type="file"
-                    id="additional-images"
-                    hidden
-                    multiple
-                    onChange={(e) => handleImagePreview(e, 'additional')}
-                  />
-                  <label htmlFor="additional-images">
-                    <Button component="span">
-                      Upload Additional Images
-                    </Button>
-                  </label>
+                  <Typography variant="subtitle1" gutterBottom>Additional Images</Typography>
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Box>
+                      <input
+                        accept="image/*"
+                        type="file"
+                        id="additional-images"
+                        hidden
+                        multiple
+                        onChange={(e) => handleImagePreview(e, 'additional')}
+                      />
+                      <label htmlFor="additional-images">
+                        <Button component="span">
+                          Upload Images
+                        </Button>
+                      </label>
+                    </Box>
+                    <Typography>OR</Typography>
+                    <Controller
+                      name="additional_image_urls"
+                      control={control}
+                      render={({ field }) => (
+                        <Input
+                          label="Image URLs (one per line)"
+                          multiline
+                          rows={3}
+                          placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"
+                          fullWidth
+                          onChange={(e) => {
+                            const urls = e.target.value.split('\n').filter(url => url.trim());
+                            field.onChange(urls);
+                          }}
+                        />
+                      )}
+                    />
+                  </Stack>
                   <Grid container spacing={2} sx={{ mt: 1 }}>
                     {previewImages.additional.map((preview, index) => (
                       <Grid item key={index}>
