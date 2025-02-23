@@ -17,6 +17,7 @@ import Button from '../components/common/Button'
 import Input from '../components/common/Input'
 import { Category, Ingredient } from '../types/recipe'
 import api from '../services/api'
+import { useSnackbar } from '../components/common/SnackbarProvider'
 
 interface RecipeFormData {
   title: string
@@ -46,6 +47,7 @@ interface RecipeFormData {
 
 const CreateRecipe = () => {
   const navigate = useNavigate()
+  const { showSnackbar } = useSnackbar()
   const [previewImages, setPreviewImages] = useState<{
     featured?: string
     additional: string[]
@@ -79,54 +81,98 @@ const CreateRecipe = () => {
 
   const createRecipeMutation = useMutation({
     mutationFn: async (data: RecipeFormData) => {
-      if (!data.total_time) {
-        data.total_time = (data.prep_time || 0) + data.cooking_time
-      }
-
-      const formData = new FormData()
-      
-      // Append basic recipe data
-      Object.entries(data).forEach(([key, value]) => {
-        if (key !== 'featured_image' && key !== 'additional_images' && 
-            key !== 'ingredients' && key !== 'instructions') {
-          formData.append(key, value.toString())
+      try {
+        if (!data.total_time) {
+          data.total_time = (data.prep_time || 0) + data.cooking_time
         }
-      })
 
-      // Append ingredients and instructions as JSON strings
-      formData.append('ingredients', JSON.stringify(data.ingredients))
-      formData.append('instructions', JSON.stringify(data.instructions))
+        // Create a payload object instead of FormData
+        const payload = {
+          // Basic recipe data
+          title: data.title,
+          description: data.description,
+          cooking_time: data.cooking_time,
+          prep_time: data.prep_time,
+          total_time: data.total_time,
+          servings: data.servings,
+          difficulty: data.difficulty,
+          category: data.category.toUpperCase(),
+          cuisine: data.cuisine,
 
-      // Handle featured image (either file upload or URL)
-      if (data.featured_image instanceof File) {
-        formData.append('featured_image', data.featured_image)
-      } else if (data.featured_image_url) {
-        formData.append('featured_image', data.featured_image_url)
-      }
+          // Convert URLs to strings
+          featured_image: typeof data.featured_image_url === 'string' 
+            ? data.featured_image_url 
+            : null,
+          additional_images: (data.additional_image_urls || [])
+            .filter(url => typeof url === 'string'),
 
-      // Handle additional images (mix of files and URLs)
-      if (data.additional_images) {
-        const additionalImageUrls: string[] = []
-        
-        Array.from(data.additional_images).forEach(image => {
-          if (image instanceof File) {
-            formData.append('additional_images', image)
-          } else if (typeof image === 'string') {
-            additionalImageUrls.push(image)
-          }
+          // Ensure ingredients have the correct structure for the join table
+          ingredients: data.ingredients.map(ing => ({
+            ingredient_id: Number(ing.ingredient_id),
+            quantity: Number(ing.quantity),
+            notes: ing.notes || null
+          })),
+
+          instructions: data.instructions.map((inst, index) => ({
+            step_number: index + 1,
+            description: inst.description
+          })),
+        }
+
+        // Handle file uploads if present
+        if (data.featured_image instanceof File) {
+          const uploadedUrl = await uploadImage(data.featured_image)
+          payload.featured_image = uploadedUrl
+        }
+
+        if (data.additional_images?.length) {
+          const uploadedUrls = await Promise.all(
+            Array.from(data.additional_images)
+              .filter((image): image is File => image instanceof File)
+              .map(file => uploadImage(file))
+          )
+          payload.additional_images = [
+            ...(payload.additional_images || []),
+            ...uploadedUrls
+          ]
+        }
+
+        // Send the payload as JSON
+        const response = await api.post('/api/recipes/create', payload, {
+          headers: { 'Content-Type': 'application/json' },
         })
+        return response.data
 
-        if (additionalImageUrls.length > 0) {
-          formData.append('additional_image_urls', JSON.stringify(additionalImageUrls))
+      } catch (error: any) {
+        if (error.response) {
+          if (error.response.status === 422) {
+            const validationErrors = error.response.data.detail
+            let errorMessage = 'Validation Error: '
+            if (Array.isArray(validationErrors)) {
+              errorMessage += validationErrors.map((err: any) => {
+                // Include the field name in the error message
+                return `${err.loc[err.loc.length - 1]}: ${err.msg}`
+              }).join(', ')
+            } else {
+              errorMessage += validationErrors
+            }
+            throw new Error(errorMessage)
+          } else {
+            throw new Error(error.response.data.detail || 'An error occurred while creating the recipe')
+          }
+        } else if (error.request) {
+          throw new Error('No response received from server')
+        } else {
+          throw new Error('Error setting up the request')
         }
       }
-
-      return api.post('/api/recipes/create', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      showSnackbar('Recipe created successfully!', 'success')
       navigate('/my-recipes')
+    },
+    onError: (error: Error) => {
+      showSnackbar(error.message, 'error')
     },
   })
 
@@ -148,8 +194,23 @@ const CreateRecipe = () => {
     }
   }
 
-  const onSubmit = (data: RecipeFormData) => {
-    createRecipeMutation.mutate(data)
+  const onSubmit = async (data: RecipeFormData) => {
+    try {
+      await createRecipeMutation.mutateAsync(data)
+    } catch (error) {
+      // Error will be handled by onError callback
+    }
+  }
+
+  async function uploadImage(file: File): Promise<string> {
+    const formData = new FormData()
+    formData.append('file', file)
+    
+    const response = await api.post('/api/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    
+    return response.data.url
   }
 
   return (
@@ -241,8 +302,8 @@ const CreateRecipe = () => {
                         helperText={errors.category?.message}
                         {...field}
                       >
-                        {Object.entries(Category).map(([key, value]) => (
-                          <MenuItem key={key} value={value}>
+                        {Object.entries(Category).map(([key]) => (
+                          <MenuItem key={key} value={key}>
                             {key.charAt(0) + key.slice(1).toLowerCase()}
                           </MenuItem>
                         ))}
@@ -271,11 +332,13 @@ const CreateRecipe = () => {
                   <Controller
                     name={`ingredients.${index}.ingredient_id`}
                     control={control}
+                    rules={{ required: 'Ingredient is required' }}
                     render={({ field }) => (
                       <Input
                         select
                         label="Ingredient"
                         {...field}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
                         sx={{ flexGrow: 1 }}
                       >
                         {ingredients?.map((ing) => (
