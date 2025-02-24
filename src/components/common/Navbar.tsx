@@ -28,20 +28,22 @@ import PersonIcon from '@mui/icons-material/Person';
 import SettingsIcon from '@mui/icons-material/Settings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useAuth } from '../../hooks/useAuth';
+import Fade from '@mui/material/Fade';
+import ClickAwayListener from '@mui/material/ClickAwayListener';
 
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',
   borderRadius: theme.shape.borderRadius,
-  backgroundColor: alpha(theme.palette.common.white, 0.15),
+  backgroundColor: alpha(theme.palette.background.paper, 0.05),
   '&:hover': {
-    backgroundColor: alpha(theme.palette.common.white, 0.25),
+    backgroundColor: alpha(theme.palette.background.paper, 0.1),
   },
   marginRight: theme.spacing(2),
   marginLeft: 0,
   width: '100%',
+  transition: theme.transitions.create(['background-color', 'width']),
   [theme.breakpoints.up('sm')]: {
-    marginLeft: theme.spacing(3),
-    width: 'auto',
+    width: '400px',
   },
 }));
 
@@ -73,6 +75,7 @@ const Navbar = () => {
   const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
   const { isAuthenticated, handleLogout, user } = useAuth();
   const theme = useTheme();
+  const [showSearch, setShowSearch] = useState(false);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -155,35 +158,39 @@ const Navbar = () => {
   return (
     <Box sx={{ width: '100%' }}>
       <AppBar 
-        position="static" 
+        position="fixed" 
         color="default" 
-        elevation={1}
-        sx={{ width: '100%' }}
+        elevation={0}
+        sx={{
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          backdropFilter: 'blur(20px)',
+          backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        }}
       >
-        <Container maxWidth={false}>
-          <Toolbar disableGutters>
+        <Container maxWidth="xl">
+          <Toolbar disableGutters sx={{ minHeight: '70px' }}>
             {/* Logo */}
             <Typography
-              variant="h6"
-              noWrap
+              variant="h5"
               component={RouterLink}
               to="/"
               sx={{
-                mr: 2,
+                mr: 4,
                 display: { xs: 'none', md: 'flex' },
                 fontWeight: 700,
                 color: 'primary.main',
                 textDecoration: 'none',
+                letterSpacing: '-0.5px',
               }}
             >
               RecipeHub
             </Typography>
 
             {/* Mobile menu icon */}
-            <Box sx={{ flexGrow: 0, display: { xs: 'flex', md: 'none' } }}>
+            <Box sx={{ display: { xs: 'flex', md: 'none' }, mr: 1 }}>
               <IconButton
                 size="large"
-                aria-label="menu"
                 onClick={handleDrawerToggle}
                 color="inherit"
               >
@@ -191,58 +198,41 @@ const Navbar = () => {
               </IconButton>
             </Box>
 
-            {/* Mobile logo */}
-            <Typography
-              variant="h6"
-              noWrap
-              component={RouterLink}
-              to="/"
-              sx={{
-                mr: 2,
-                display: { xs: 'flex', md: 'none' },
-                flexGrow: 1,
-                fontWeight: 700,
-                color: 'primary.main',
-                textDecoration: 'none',
-              }}
-            >
-              RecipeHub
-            </Typography>
-
             {/* Desktop menu items */}
-            <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
+            <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, gap: 1 }}>
               {menuItems.map((item) => (
                 <Button
                   key={item.text}
                   component={RouterLink}
                   to={item.path}
-                  sx={{ my: 2, color: 'text.primary', display: 'block' }}
+                  sx={{
+                    color: 'text.primary',
+                    px: 2,
+                    py: 1,
+                    borderRadius: 2,
+                    '&:hover': {
+                      backgroundColor: 'action.hover',
+                    },
+                  }}
                 >
                   {item.text}
                 </Button>
               ))}
             </Box>
 
-            {/* Search */}
-            <Search sx={{ display: { xs: 'none', md: 'block' } }}>
-              <SearchIconWrapper>
+            {/* Search and Auth section */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <IconButton onClick={() => setShowSearch(!showSearch)}>
                 <SearchIcon />
-              </SearchIconWrapper>
-              <StyledInputBase
-                placeholder="Search recipes..."
-                inputProps={{ 'aria-label': 'search' }}
-              />
-            </Search>
-
-            {/* Auth buttons or User menu */}
-            <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
+              </IconButton>
+              
               {!isAuthenticated ? (
-                <>
+                <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1 }}>
                   <Button
                     component={RouterLink}
                     to="/login"
+                    variant="text"
                     color="inherit"
-                    sx={{ ml: 1 }}
                   >
                     Login
                   </Button>
@@ -250,72 +240,71 @@ const Navbar = () => {
                     component={RouterLink}
                     to="/register"
                     variant="contained"
-                    color="secondary"
-                    sx={{ ml: 1 }}
+                    color="primary"
                   >
                     Sign Up
                   </Button>
-                </>
+                </Box>
               ) : (
-                <>
-                  <Tooltip title="Account settings">
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>                      
-                      <IconButton
-                        onClick={handleUserMenuOpen}
-                        size="small"
-                        sx={{ ml: 2 }}
-                        aria-controls={userMenuAnchor ? 'user-menu' : undefined}
-                        aria-haspopup="true"
-                        aria-expanded={userMenuAnchor ? 'true' : undefined}
-                      >
-                        <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
-                          <AccountCircleIcon />
-                        </Avatar>
-                        </IconButton>
-                        <Typography sx={{ mr: 1 }}>{user?.name || 'User'}</Typography>
-                    </Box>
-                  </Tooltip>
-                  <Menu
-                    id="user-menu"
-                    anchorEl={userMenuAnchor}
-                    open={Boolean(userMenuAnchor)}
-                    onClose={handleUserMenuClose}
-                    onClick={handleUserMenuClose}
-                    PaperProps={{
-                      elevation: 0,
-                      sx: {
-                        overflow: 'visible',
-                        filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
-                        mt: 1.5,
-                        '& .MuiAvatar-root': {
-                          width: 32,
-                          height: 32,
-                          ml: -0.5,
-                          mr: 1,
-                        },
-                      },
+                <Tooltip title="Account settings">
+                  <IconButton
+                    onClick={handleUserMenuOpen}
+                    size="small"
+                    sx={{ 
+                      ml: 1,
+                      border: '2px solid',
+                      borderColor: 'primary.main',
+                      p: 0.5 
                     }}
-                    transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                    anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                   >
-                    {userMenuItems.map((item) => (
-                      <MenuItem
-                        key={item.text}
-                        onClick={item.action || (() => {})}
-                        component={item.path ? RouterLink : 'div'}
-                        to={item.path || ''}
-                      >
-                        {item.icon}
-                        <Typography sx={{ ml: 1 }}>{item.text}</Typography>
-                      </MenuItem>
-                    ))}
-                  </Menu>
-                </>
+                    <Avatar 
+                      sx={{ 
+                        width: 32, 
+                        height: 32,
+                        bgcolor: 'primary.main',
+                        fontSize: '0.875rem',
+                      }}
+                    >
+                      {user?.name?.[0]?.toUpperCase() || 'U'}
+                    </Avatar>
+                  </IconButton>
+                </Tooltip>
               )}
             </Box>
           </Toolbar>
+
+          {/* Collapsible Search Bar */}
+          <Fade in={showSearch}>
+            <Box
+              sx={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                p: 2,
+                bgcolor: 'background.paper',
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+                zIndex: 1,
+              }}
+            >
+              <Search>
+                <SearchIconWrapper>
+                  <SearchIcon />
+                </SearchIconWrapper>
+                <StyledInputBase
+                  placeholder="Search recipes..."
+                  inputProps={{ 'aria-label': 'search' }}
+                  autoFocus
+                />
+              </Search>
+            </Box>
+          </Fade>
         </Container>
       </AppBar>
+
+      {/* Add toolbar spacing since navbar is fixed */}
+      <Toolbar />
 
       {/* Mobile drawer */}
       <Drawer
