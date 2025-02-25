@@ -57,26 +57,70 @@ const Favorites = () => {
             <Grid item xs={12} sm={6} md={4} key={recipe.id}>
               <Paper
                 sx={{
-                  p: 3,
+                  p: 0,
                   height: '100%',
                   display: 'flex',
                   flexDirection: 'column',
-                  justifyContent: 'space-between'
+                  overflow: 'hidden',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    transition: 'transform 0.2s ease-in-out',
+                    boxShadow: 3
+                  }
                 }}
               >
-                <Box>
-                  <Typography variant="h6" sx={{ mb: 1 }}>
+                <Box
+                  sx={{
+                    width: '100%',
+                    height: 200,
+                    overflow: 'hidden',
+                    position: 'relative'
+                  }}
+                >
+                  {recipe.featured_image ? (
+                    <img
+                      src={recipe.featured_image}
+                      alt={recipe.title}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                      }}
+                    />
+                  ) : (
+                    <Box
+                      sx={{
+                        width: '100%',
+                        height: '100%',
+                        bgcolor: 'grey.200',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <Typography color="text.secondary">No image</Typography>
+                    </Box>
+                  )}
+                </Box>
+                <Box sx={{ p: 2, flexGrow: 1 }}>
+                  <Typography variant="h6" gutterBottom>
                     {recipe.title}
                   </Typography>
-                  <Typography variant="body2" sx={{ mb: 2 }}>
+                  <Typography 
+                    variant="body2" 
+                    color="text.secondary"
+                    sx={{
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical'
+                    }}
+                  >
                     {recipe.description}
                   </Typography>
                 </Box>
-                <Box sx={{ 
-                  display: 'flex', 
-                  gap: 2,
-                  mt: 2 
-                }}>
+                <Box sx={{ p: 2, pt: 0, display: 'flex', gap: 2 }}>
                   <Button 
                     variant="contained" 
                     color="primary"
@@ -91,7 +135,6 @@ const Favorites = () => {
                     color="error"
                     onClick={() => {
                       recipeService.removeFromFavorites(recipe.id);
-                      // Refetch the favorites query to update the list
                       queryClient.invalidateQueries({ queryKey: ['favorites'] });
                     }}
                   >

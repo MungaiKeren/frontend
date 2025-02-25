@@ -112,29 +112,79 @@ const Home = () => {
               <Grid item xs={12} md={4} key={recipe.id}>
                 <Paper
                   sx={{
-                    p: 3,
-                    height: 200,
+                    height: '100%',
                     display: 'flex',
                     flexDirection: 'column',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    textAlign: 'center'
+                    overflow: 'hidden',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      transition: 'transform 0.2s ease-in-out',
+                      boxShadow: 3
+                    }
                   }}
                 >
-                  <Typography variant="h6" sx={{ mb: 1 }}>
-                    {recipe.title}
-                  </Typography>
-                  <Typography variant="body2" sx={{ mb: 2 }}>
-                    {recipe.description}
-                  </Typography>
-                  <Button 
-                    variant="text" 
-                    color="primary"
-                    component={Link}
-                    to={`/recipes/${recipe.id}`}
+                  <Box
+                    sx={{
+                      width: '100%',
+                      height: 200,
+                      overflow: 'hidden',
+                      position: 'relative'
+                    }}
                   >
-                    View Recipe
-                  </Button>
+                    {recipe.featured_image ? (
+                      <img
+                        src={recipe.featured_image}
+                        alt={recipe.title}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover'
+                        }}
+                      />
+                    ) : (
+                      <Box
+                        sx={{
+                          width: '100%',
+                          height: '100%',
+                          bgcolor: 'grey.200',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <Typography color="text.secondary">No image</Typography>
+                      </Box>
+                    )}
+                  </Box>
+                  <Box sx={{ p: 2, flexGrow: 1 }}>
+                    <Typography variant="h6" gutterBottom>
+                      {recipe.title}
+                    </Typography>
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary"
+                      sx={{
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical'
+                      }}
+                    >
+                      {recipe.description}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ p: 2, pt: 0 }}>
+                    <Button 
+                      variant="contained" 
+                      color="primary"
+                      component={Link}
+                      to={`/recipes/${recipe.id}`}
+                      fullWidth
+                    >
+                      View Recipe
+                    </Button>
+                  </Box>
                 </Paper>
               </Grid>
             ))
