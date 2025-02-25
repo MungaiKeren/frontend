@@ -28,7 +28,7 @@ const RecipeCard = ({ recipe }: RecipeCardProps) => {
 
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation()
-    navigate(`/recipes/edit/${recipe.id}`)
+    navigate(`/recipes/${recipe.id}/edit`)
   }
 
   return (

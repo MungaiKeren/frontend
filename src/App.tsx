@@ -16,6 +16,7 @@ import { Box } from '@mui/material'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import MyRecipes from './pages/MyRecipes'
 import { SnackbarProvider } from './components/common/SnackbarProvider'
+import EditRecipe from './pages/EditRecipe'
 
 const queryClient = new QueryClient()
 
@@ -46,6 +47,7 @@ function App() {
                     <Route path="/favorites" element={<Favorites />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
+                    <Route path="/recipes/:id/edit" element={<EditRecipe />} />
                   </Routes>
                 </Box>
                 <Footer />

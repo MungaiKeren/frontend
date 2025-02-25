@@ -11,10 +11,11 @@ import fimage from "../assets/images/veg.jpg";
 import { Link } from 'react-router-dom';
 import { Skeleton } from '@mui/material';
 import { useRecipes } from '../hooks/useRecipes';
+import { useNavigate } from 'react-router-dom';
 
 // Add this near the top of the component
 const Home = () => {
-  
+  const navigate = useNavigate();
 
   const { data: recipes, isLoading, error } = useRecipes();
 
@@ -57,6 +58,7 @@ const Home = () => {
                 color="primary"
                 startIcon={<RestaurantIcon />}
                 sx={{ mr: 2 }}
+                onClick={() => navigate('/recipes')}
               >
                 Browse Recipes
               </Button>
@@ -64,6 +66,7 @@ const Home = () => {
                 variant="outlined" 
                 size="large"
                 color="inherit"
+                onClick={() => navigate('/create-recipe')}
               >
                 Create Recipe
               </Button>
