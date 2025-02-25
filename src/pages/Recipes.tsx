@@ -5,16 +5,50 @@ import {
   Paper,
   Button,
   Skeleton,
-  Box
+  Box,
+  Tabs,
+  Tab
 } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { useRecipes } from '../hooks/useRecipes';
+import React from 'react';
+import { Category } from '../types/recipe';
 
 const Recipes = () => {
   const { data: recipes, isLoading, error } = useRecipes();
+  const [selectedCategory, setSelectedCategory] = React.useState<Category | 'ALL'>('ALL');
+
+  const handleCategoryChange = (_event: React.SyntheticEvent, newValue: Category | 'ALL') => {
+    setSelectedCategory(newValue);
+  };
+
+  const filteredRecipes = React.useMemo(() => {
+    if (!recipes) return [];
+    if (selectedCategory === 'ALL') return recipes;
+    return recipes.filter(recipe => 
+      recipe.category?.toLowerCase() === selectedCategory.toLowerCase()
+    );
+  }, [recipes, selectedCategory]);
 
   return (
     <Container maxWidth={false} sx={{ py: 4 }}>     
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 4 }}>
+        <Tabs 
+          value={selectedCategory} 
+          onChange={handleCategoryChange}
+          variant="scrollable"
+          scrollButtons="auto"
+        >
+          <Tab label="All" value="ALL" />
+          {Object.values(Category).map((category) => (
+            <Tab 
+              key={category} 
+              label={category.charAt(0).toUpperCase() + category.slice(1).toLowerCase()} 
+              value={category.toLowerCase()} 
+            />
+          ))}
+        </Tabs>
+      </Box>
 
       <Grid container spacing={4}>
         {isLoading ? (
@@ -27,7 +61,7 @@ const Recipes = () => {
         ) : error ? (
           <Typography color="error">Error loading recipes</Typography>
         ) : (
-          recipes?.map((recipe) => (
+          filteredRecipes.map((recipe) => (
             <Grid item xs={12} sm={6} md={4} key={recipe.id}>
               <Paper
                 sx={{

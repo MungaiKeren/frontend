@@ -1,12 +1,12 @@
 export enum Category {
-  BREAKFAST = "BREAKFAST",
-  LUNCH = "LUNCH",
-  DINNER = "DINNER",
-  DESSERT = "DESSERT",
-  SNACK = "SNACK",
-  APPETIZER = "APPETIZER",
-  BEVERAGE = "BEVERAGE",
-  OTHER = "OTHER"
+  BREAKFAST = "breakfast",
+  LUNCH = "lunch",
+  DINNER = "dinner",
+  DESSERT = "dessert",
+  SNACK = "snack",
+  APPETIZER = "appetizer",
+  BEVERAGE = "beverage",
+  OTHER = "other"
 }
 
 export interface Recipe {
