@@ -4,7 +4,8 @@ import {
   Box, 
   Paper,
   Button,
-  Grid 
+  Grid,
+  IconButton
 } from '@mui/material';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
 import fimage from "../assets/images/veg.jpg";
@@ -12,12 +13,26 @@ import { Link } from 'react-router-dom';
 import { Skeleton } from '@mui/material';
 import { useRecipes } from '../hooks/useRecipes';
 import { useNavigate } from 'react-router-dom';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import { useQueryClient } from '@tanstack/react-query';
+import { recipeService } from '../services/recipe.service';
+import { useQuery } from '@tanstack/react-query';
 
 // Add this near the top of the component
 const Home = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { data: recipes, isLoading, error } = useRecipes();
+  const { data: favorites = [] } = useQuery({
+    queryKey: ['favorites'],
+    queryFn: recipeService.getFavorites
+  });
+
+  const isFavorite = (recipeId: number) => {
+    return favorites.some(fav => fav.id === recipeId);
+  };
 
   return (
     <Box sx={{ width: '100%' }}>
@@ -112,35 +127,36 @@ const Home = () => {
               <Grid item xs={12} md={4} key={recipe.id}>
                 <Paper
                   sx={{
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
+                    height: 300,
+                    position: 'relative',
                     overflow: 'hidden',
                     '&:hover': {
+                      '& .MuiBox-root': {
+                        background: 'rgba(0, 0, 0, 0.7)',
+                      },
                       transform: 'translateY(-4px)',
                       transition: 'transform 0.2s ease-in-out',
                       boxShadow: 3
                     }
                   }}
                 >
+                  {/* Background Image */}
                   <Box
                     sx={{
-                      width: '100%',
-                      height: 200,
-                      overflow: 'hidden',
-                      position: 'relative'
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      '& img': {
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                      }
                     }}
                   >
                     {recipe.featured_image ? (
-                      <img
-                        src={recipe.featured_image}
-                        alt={recipe.title}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover'
-                        }}
-                      />
+                      <img src={recipe.featured_image} alt={recipe.title} />
                     ) : (
                       <Box
                         sx={{
@@ -156,34 +172,85 @@ const Home = () => {
                       </Box>
                     )}
                   </Box>
-                  <Box sx={{ p: 2, flexGrow: 1 }}>
-                    <Typography variant="h6" gutterBottom>
-                      {recipe.title}
-                    </Typography>
-                    <Typography 
-                      variant="body2" 
-                      color="text.secondary"
+
+                  {/* Overlay Content */}
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      background: 'rgba(0, 0, 0, 0.5)',
+                      color: 'white',
+                      p: 3,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'flex-end',
+                      transition: 'background 0.3s ease'
+                    }}
+                  >
+                    {/* Favorite Button */}
+                    <IconButton
                       sx={{
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical'
+                        position: 'absolute',
+                        top: 8,
+                        right: 8,
+                        color: 'white',
+                        '&:hover': {
+                          color: 'primary.main'
+                        }
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (isFavorite(recipe.id)) {
+                          recipeService.removeFromFavorites(recipe.id);
+                        } else {
+                          recipeService.addToFavorites(recipe.id);
+                        }
+                        queryClient.invalidateQueries({ queryKey: ['favorites'] });
                       }}
                     >
-                      {recipe.description}
-                    </Typography>
-                  </Box>
-                  <Box sx={{ p: 2, pt: 0 }}>
-                    <Button 
-                      variant="contained" 
-                      color="primary"
-                      component={Link}
+                      {isFavorite(recipe.id) ? (
+                        <FavoriteIcon color="error" />
+                      ) : (
+                        <FavoriteBorderIcon />
+                      )}
+                    </IconButton>
+
+                    {/* Title and Description */}
+                    <Link
                       to={`/recipes/${recipe.id}`}
-                      fullWidth
+                      style={{ 
+                        textDecoration: 'none', 
+                        color: 'inherit',
+                        display: 'block'
+                      }}
                     >
-                      View Recipe
-                    </Button>
+                      <Typography 
+                        variant="h6" 
+                        gutterBottom
+                        sx={{ 
+                          textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        {recipe.title}
+                      </Typography>
+                      <Typography 
+                        variant="body2"
+                        sx={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          textShadow: '1px 1px 2px rgba(0,0,0,0.5)'
+                        }}
+                      >
+                        {recipe.description}
+                      </Typography>
+                    </Link>
                   </Box>
                 </Paper>
               </Grid>
